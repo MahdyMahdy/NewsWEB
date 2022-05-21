@@ -1,0 +1,11 @@
+CREATE TABLE users (user_id int(11) PRIMARY KEY AUTO_INCREMENT,user_name varchar(30) ,user_email varchar(30) ,user_password varchar(30) ,user_role varchar(10))$$
+CREATE TABLE news (news_id int PRIMARY KEY AUTO_INCREMENT,news_title text,news_body text,news_date datetime DEFAULT NULL,category varchar(15) DEFAULT NULL)$$
+CREATE TABLE inserted_by (user_id int ,news_id int,PRIMARY KEY(user_id,news_id),FOREIGN KEY (user_id) REFERENCES users(user_id),FOREIGN KEY (news_id) REFERENCES news(news_id))$$
+CREATE TABLE confionce (user_id int,news_id int,rate int,PRIMARY KEY(user_id,news_id),FOREIGN KEY (user_id) REFERENCES users(user_id),FOREIGN KEY (news_id) REFERENCES news(news_id))$$
+CREATE TABLE forbiddenwords (word varchar(20) NOT NULL)$$
+CREATE VIEW data AS SELECT news.news_id AS news_id, news.news_title AS news_title, confionce.rate AS rate, users.user_role AS user_role FROM users ,confionce,news WHERE users.user_id = confionce.user_id AND confionce.news_id = news.news_id ORDER BY news.news_id ASC$$
+CREATE VIEW data1 AS SELECT data.news_id AS news_id,data.news_title AS news_title, sum(data.rate) / count(0) AS rate, data.user_role AS user_role FROM data GROUP BY data.news_id, data.user_role$$
+CREATE FUNCTION `getRel` (`nb` DECIMAL(10,2), `role` VARCHAR(10)) RETURNS DECIMAL(10,2)  BEGIN DECLARE rnb DECIMAL(10,2);IF role = 'admin' THEN SET rnb = nb*0.5;ELSEIF role = 'user' THEN SET rnb = nb*0.2;ELSEIF role = 'media' THEN SET rnb = nb*0.3;END IF;RETURN (rnb);END$$
+CREATE VIEW data2 AS SELECT data1.news_id AS news_id, data1.news_title AS news_title, getRel(data1.rate,data1.user_role) AS rate, data1.user_role AS user_role FROM data1$$
+CREATE VIEW `data3`  AS SELECT `data2`.`news_id` AS `news_id`, `data2`.`news_title` AS `news_title`, sum(`data2`.`rate`) AS `rate` FROM `data2` GROUP BY `data2`.`news_id`$$
+INSERT INTO `users` (`user_id`, `user_name`, `user_email`, `user_password`, `user_role`) VALUES (0, 'Admin', 'admin@gmail.com', '123456', 'admin'),(0, 'user', 'user@gmail.com', '123456', 'user')
